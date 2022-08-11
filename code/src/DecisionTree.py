@@ -150,7 +150,7 @@ if __name__ == "__main__":
     train = pd.read_csv("../../data/train.csv")
     test = pd.read_csv("../../data/test.csv")
     t1 = time.time()
-    min_sample_leaf = 31
+    min_sample_leaf = 6
     tree = build_tree(train ,min_sample_leaf)
     t2 = time.time()
     score = hit_rate(tree, test)
