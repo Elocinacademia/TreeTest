@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
 
@@ -35,6 +36,9 @@ print('Testing Features Shape:', test_X.shape)
 print('Testing Labels Shape:', test_y.shape)
 
 
+
+
+
 # # The baseline predictions are the historical averages
 # baseline_preds = test_X[:, feature_list.index('average')]
 
@@ -47,18 +51,137 @@ print('Testing Labels Shape:', test_y.shape)
 print("Load model ....")
 from sklearn.ensemble import RandomForestClassifier
 
+
+
+# if using decision tree
+
+from matplotlib import pyplot as plt
+from sklearn.tree import DecisionTreeClassifier 
+from sklearn import tree
+from sklearn.tree import _tree
+
+df = DecisionTreeClassifier(max_depth=3, random_state=1234)
+model = df.fit(train_X, train_y)
+
+# get the text representation
+text_representation = tree.export_text(df, feature_names=feature_list)
+print(text_representation)
+
+def get_rules(tree, feature_names, class_names):
+    tree_ = tree.tree_
+    feature_name = [
+        feature_names[i] if i != _tree.TREE_UNDEFINED else "undefined!"
+        for i in tree_.feature
+    ]
+
+    paths = []
+    path = []
+    
+    def recurse(node, path, paths):
+        
+        if tree_.feature[node] != _tree.TREE_UNDEFINED:
+            name = feature_name[node]
+            threshold = tree_.threshold[node]
+            p1, p2 = list(path), list(path)
+            p1 += [f"({name} <= {np.round(threshold, 3)})"]
+            recurse(tree_.children_left[node], p1, paths)
+            p2 += [f"({name} > {np.round(threshold, 3)})"]
+            recurse(tree_.children_right[node], p2, paths)
+        else:
+            path += [(tree_.value[node], tree_.n_node_samples[node])]
+            paths += [path]
+            
+    recurse(0, path, paths)
+
+    # sort by samples count
+    samples_count = [p[-1][1] for p in paths]
+    ii = list(np.argsort(samples_count))
+    paths = [paths[i] for i in reversed(ii)]
+    
+    rules = []
+    for path in paths:
+        rule = "if "
+        
+        for p in path[:-1]:
+            if rule != "if ":
+                rule += " and "
+            rule += str(p)
+        rule += " then "
+        if class_names is None:
+            rule += "response: "+str(np.round(path[-1][0][0][0],3))
+        else:
+            classes = path[-1][0][0]
+            l = np.argmax(classes)
+            rule += f"class: {class_names[l]} (proba: {np.round(100.0*classes[l]/np.sum(classes),2)}%)"
+        rule += f" | based on {path[-1][1]:,} samples"
+        rules += [rule]
+        
+    return rules
+
+rules = get_rules(df, feature_list, ["accept","unaccept"])
+for r in rules:
+    print(r)
+
+
+import pdb;pdb.set_trace()
+
+
+
+
+
+
+
+
+
+
+
+
 # Instantiate model with 1000 decision trees
 # clf = RandomForestClassifier(max_depth=10, random_state=42)
 # clf = RandomForestClassifier(n_estimators=100)
 clf= RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini', 
-    max_depth=None, max_features='sqrt', max_leaf_nodes=None,
+    max_depth=5, max_features='sqrt', max_leaf_nodes=None,
     min_impurity_decrease=0.0,
     min_samples_leaf=1, min_samples_split=2,
-    min_weight_fraction_leaf=0.0, n_estimators=100, n_jobs=1,
-    oob_score=False, random_state=None, verbose=0,
+    min_weight_fraction_leaf=0.0, n_estimators=100, n_jobs=-1,
+    oob_score=True, random_state=None, verbose=0,
     warm_start=False)
+
+
+
 # Train the model on training data
 clf.fit(train_X, train_y)
+
+# checking the oob score
+print(clf.oob_score_)
+
+#Let’s do hyperparameter tuning for Random Forest using GridSearchCV and fit the data.
+clf = RandomForestClassifier(random_state=42, n_jobs=-1)
+params = {'max_depth': [2,3,5,10,20],
+'min_samples_leaf': [5,10,20,50,100,200],
+'n_estimators': [10,25,30,50,100,200]
+}
+
+
+from sklearn.model_selection import GridSearchCV
+# Instantiate the grid search model
+grid_search = GridSearchCV(estimator=clf,param_grid=params,cv = 4,n_jobs=-1, verbose=1, scoring="accuracy")
+
+
+
+#%%time
+grid_search.fit(train_X, train_y)
+
+grid_search.best_score_
+
+rf_best = grid_search.best_estimator_
+rf_best
+
+from sklearn.tree import plot_tree
+plt.figure(figsize=(80,40))
+plot_tree(rf_best.estimators_[29], feature_names = feature_list,class_names=['Accept', "No Unaccept"],filled=True)
+
+import pdb;pdb.set_trace()
 
 # Use the forest's predict method on the test data
 predictions = clf.predict(test_X)
