@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 
-df = pd.read_csv("../../../data/data.csv")
+df = pd.read_csv("../../../data/smarthome_plaintext.csv")
 print("Read data ....")
 
 #Drop nun values
@@ -11,6 +11,7 @@ df.dropna(inplace=True)
 # One-hot encode the data using pandas get_dummies
 df = pd.get_dummies(df)
 
+# import pdb;pdb.set_trace()
 # Labels are the values we want to predict
 labels = np.array(df['Class'])
 
@@ -28,7 +29,7 @@ df = np.array(df)
 from sklearn.model_selection import train_test_split
 
 # Split the data into training and testing sets
-train_X, test_X, train_y, test_y = train_test_split(df, labels, test_size = 0.2, random_state = 42)
+train_X, test_X, train_y, test_y = train_test_split(df, labels, test_size = 0.75, random_state = 42)
 
 print('Training Features Shape:', train_X.shape)
 print('Training Labels Shape:', train_y.shape)
@@ -60,7 +61,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn import tree
 from sklearn.tree import _tree
 
-df = DecisionTreeClassifier(max_depth=3, random_state=1234)
+df = DecisionTreeClassifier(max_depth=5, random_state=42)
 model = df.fit(train_X, train_y)
 
 # get the text representation
@@ -118,12 +119,12 @@ def get_rules(tree, feature_names, class_names):
         
     return rules
 
-rules = get_rules(df, feature_list, ["accept","unaccept"])
+rules = get_rules(df, feature_list, ["unaccept","accept"])
 for r in rules:
     print(r)
 
 
-import pdb;pdb.set_trace()
+# import pdb;pdb.set_trace()
 
 
 
@@ -139,52 +140,53 @@ import pdb;pdb.set_trace()
 # Instantiate model with 1000 decision trees
 # clf = RandomForestClassifier(max_depth=10, random_state=42)
 # clf = RandomForestClassifier(n_estimators=100)
-clf= RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini', 
-    max_depth=5, max_features='sqrt', max_leaf_nodes=None,
-    min_impurity_decrease=0.0,
-    min_samples_leaf=1, min_samples_split=2,
-    min_weight_fraction_leaf=0.0, n_estimators=100, n_jobs=-1,
-    oob_score=True, random_state=None, verbose=0,
-    warm_start=False)
+
+# clf= RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini', 
+#     max_depth=5, max_features='sqrt', max_leaf_nodes=None,
+#     min_impurity_decrease=0.0,
+#     min_samples_leaf=1, min_samples_split=2,
+#     min_weight_fraction_leaf=0.0, n_estimators=100, n_jobs=-1,
+#     oob_score=True, random_state=None, verbose=0,
+#     warm_start=False)
 
 
 
-# Train the model on training data
-clf.fit(train_X, train_y)
+# # Train the model on training data
+# clf.fit(train_X, train_y)
 
-# checking the oob score
-print(clf.oob_score_)
+# # checking the oob score
+# print(clf.oob_score_)
 
-#Let’s do hyperparameter tuning for Random Forest using GridSearchCV and fit the data.
-clf = RandomForestClassifier(random_state=42, n_jobs=-1)
-params = {'max_depth': [2,3,5,10,20],
-'min_samples_leaf': [5,10,20,50,100,200],
-'n_estimators': [10,25,30,50,100,200]
-}
-
-
-from sklearn.model_selection import GridSearchCV
-# Instantiate the grid search model
-grid_search = GridSearchCV(estimator=clf,param_grid=params,cv = 4,n_jobs=-1, verbose=1, scoring="accuracy")
+# #Let’s do hyperparameter tuning for Random Forest using GridSearchCV and fit the data.
+# clf = RandomForestClassifier(random_state=42, n_jobs=-1)
+# params = {'max_depth': [2,3,5,10,20],
+# 'min_samples_leaf': [5,10,20,50,100,200],
+# 'n_estimators': [10,25,30,50,100,200]
+# }
 
 
+# from sklearn.model_selection import GridSearchCV
+# # Instantiate the grid search model
+# grid_search = GridSearchCV(estimator=clf,param_grid=params,cv = 4,n_jobs=-1, verbose=1, scoring="accuracy")
 
-#%%time
-grid_search.fit(train_X, train_y)
 
-grid_search.best_score_
 
-rf_best = grid_search.best_estimator_
-rf_best
+# #%%time
+# grid_search.fit(train_X, train_y)
 
-from sklearn.tree import plot_tree
-plt.figure(figsize=(80,40))
-plot_tree(rf_best.estimators_[29], feature_names = feature_list,class_names=['Accept', "No Unaccept"],filled=True)
+# grid_search.best_score_
 
-import pdb;pdb.set_trace()
+# rf_best = grid_search.best_estimator_
+# rf_best
+
+# from sklearn.tree import plot_tree
+# plt.figure(figsize=(80,40))
+# plot_tree(rf_best.estimators_[29], feature_names = feature_list,class_names=['Accept', "No Unaccept"],filled=True)
+
+# import pdb;pdb.set_trace()
 
 # Use the forest's predict method on the test data
-predictions = clf.predict(test_X)
+predictions = df.predict(test_X)
 #Import scikit-learn metrics module for accuracy calculation
 from sklearn import metrics
 # Model Accuracy, how often is the classifier correct?
@@ -275,21 +277,21 @@ train_X, test_X, train_y, test_y = train_test_split(X, y, test_size = 0.2, rando
 #     bootstrap=True, 
 #     n_jobs=-1, 
 #     random_state=0)
-new_clf = RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini', 
-    max_depth=None, max_features='sqrt', max_leaf_nodes=None,
-    min_impurity_decrease=0.0,
-    min_samples_leaf=1, min_samples_split=2,
-    min_weight_fraction_leaf=0.0, n_estimators=100, n_jobs=1,
-    oob_score=False, random_state=None, verbose=0,
-    warm_start=False)
-new_clf.fit(train_X, train_y)
+# new_clf = RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini', 
+#     max_depth=None, max_features='sqrt', max_leaf_nodes=None,
+#     min_impurity_decrease=0.0,
+#     min_samples_leaf=1, min_samples_split=2,
+#     min_weight_fraction_leaf=0.0, n_estimators=100, n_jobs=1,
+#     oob_score=False, random_state=None, verbose=0,
+#     warm_start=False)
+# new_clf.fit(train_X, train_y)
 
-# prediction on test set
-y_pred = new_clf.predict(test_X)
+# # prediction on test set
+# y_pred = new_clf.predict(test_X)
 
-from sklearn import metrics
-# Model Accuracy, how often is the classifier correct?
-print("Final Accuracy:",metrics.accuracy_score(test_y, y_pred))
+# from sklearn import metrics
+# # Model Accuracy, how often is the classifier correct?
+# print("Final Accuracy:",metrics.accuracy_score(test_y, y_pred))
 
 
 

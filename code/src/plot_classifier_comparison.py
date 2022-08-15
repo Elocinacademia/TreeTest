@@ -20,10 +20,6 @@ set.
 
 """
 
-# Code source: Gaël Varoquaux
-#              Andreas Müller
-# Modified for documentation by Jaques Grobler
-# License: BSD 3 clause
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -42,18 +38,25 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.inspection import DecisionBoundaryDisplay
 
+# names = [
+#     "Nearest Neighbors",
+#     "Linear SVM",
+#     "RBF SVM",
+#     "Gaussian Process",
+#     "Decision Tree",
+#     "Random Forest",
+#     "Neural Net",
+#     "AdaBoost",
+#     "Naive Bayes",
+#     "QDA",
+# ]
+
 names = [
-    "Nearest Neighbors",
-    "Linear SVM",
-    "RBF SVM",
-    "Gaussian Process",
     "Decision Tree",
     "Random Forest",
-    "Neural Net",
-    "AdaBoost",
-    "Naive Bayes",
-    "QDA",
+    "Naive Bayes"
 ]
+
 
 classifiers = [
     # KNeighborsClassifier(4),
